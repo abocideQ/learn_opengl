@@ -23,7 +23,11 @@ class CameraUse(context: Context) {
         mCameraWrap.stopCamera()
     }
 
-    fun capture(){
+    fun setCall(cameraWrapCall: CameraWrapCall) {
+        mCameraWrap.setCall(cameraWrapCall)
+    }
+
+    fun capture() {
         mCameraWrap.capture()
     }
 

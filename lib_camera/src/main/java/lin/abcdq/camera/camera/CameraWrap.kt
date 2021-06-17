@@ -50,6 +50,10 @@ internal class CameraWrap(context: Context) {
         mCaptureSize = size
     }
 
+    fun setCall(cameraWrapCall: CameraWrapCall) {
+        mCall = cameraWrapCall
+    }
+
     @SuppressLint("MissingPermission")
     fun openCamera(facing: String, surface: Surface?) {
         initHandler()
@@ -59,6 +63,14 @@ internal class CameraWrap(context: Context) {
         mPreviewReader?.setOnImageAvailableListener(
             {
                 val image: Image = it.acquireLatestImage()
+                if (IMAGE_FORMAT == ImageFormat.YUV_420_888) {
+                    mCall?.preview(ImageUtils.YUV_420_888_data(image), image.width, image.height)
+                } else if (IMAGE_FORMAT == ImageFormat.JPEG) {
+                    val byteBuffer = image.planes[0].buffer
+                    val byteArray = ByteArray(byteBuffer.remaining())
+                    byteBuffer.get(byteArray)
+                    mCall?.preview(byteArray, image.width, image.height)
+                }
                 image.close()
             },
             mHandler
@@ -69,6 +81,14 @@ internal class CameraWrap(context: Context) {
         mCaptureReader?.setOnImageAvailableListener(
             {
                 val image: Image = it.acquireLatestImage()
+                if (IMAGE_FORMAT == ImageFormat.YUV_420_888) {
+                    mCall?.capture(ImageUtils.YUV_420_888_data(image), image.width, image.height)
+                } else if (IMAGE_FORMAT == ImageFormat.JPEG) {
+                    val byteBuffer = image.planes[0].buffer
+                    val byteArray = ByteArray(byteBuffer.remaining())
+                    byteBuffer.get(byteArray)
+                    mCall?.capture(byteArray, image.width, image.height)
+                }
                 image.close()
             },
             mHandler
@@ -199,6 +219,8 @@ internal class CameraWrap(context: Context) {
     private var mPreviewReader: ImageReader? = null
     private var mCaptureReader: ImageReader? = null
 
+    private var mCall: CameraWrapCall? = null
+
     init {
         initCameraInfo()
         initCameraSize()
@@ -262,5 +284,4 @@ internal class CameraWrap(context: Context) {
         mHandlerThread?.start()
         mHandler = Handler(mHandlerThread?.looper ?: return)
     }
-
 }

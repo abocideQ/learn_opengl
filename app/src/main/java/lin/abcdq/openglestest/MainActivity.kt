@@ -1,20 +1,26 @@
 package lin.abcdq.openglestest
 
 import android.Manifest
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.SurfaceTexture
 import android.os.Bundle
-import android.util.Log
 import android.view.Surface
 import android.view.TextureView
 import android.widget.Button
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import lin.abcdq.camera.camera.CameraUse
+import lin.abcdq.camera.camera.CameraWrapCall
+import java.nio.ByteBuffer
+
 
 class MainActivity : AppCompatActivity() {
 
     private var mButtonFacing: Button? = null
     private var mButtonSize: Button? = null
     private var mButtonCapture: Button? = null
+    private var mCaptureImageView: ImageView? = null
     private var mTextureView: TextureView? = null
     private val mCamera by lazy { CameraUse(this) }
 
@@ -32,6 +38,7 @@ class MainActivity : AppCompatActivity() {
         mButtonFacing = findViewById(R.id.bt_facing)
         mButtonSize = findViewById(R.id.bt_size)
         mButtonCapture = findViewById(R.id.bt_capture)
+        mCaptureImageView = findViewById(R.id.iv_capture)
         mButtonFacing?.setOnClickListener {
             mCamera.switch()
         }
@@ -55,6 +62,16 @@ class MainActivity : AppCompatActivity() {
             )
         }
         mButtonCapture?.setOnClickListener {
+            mCamera.setCall(object : CameraWrapCall {
+                override fun preview(byteArray: ByteArray, width: Int, height: Int) {
+
+                }
+
+                override fun capture(byteArray: ByteArray, width: Int, height: Int) {
+                    val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+                    runOnUiThread {  mCaptureImageView?.setImageBitmap(bitmap) }
+                }
+            })
             mCamera.capture()
         }
         mTextureView = findViewById(R.id.tv_surface)
