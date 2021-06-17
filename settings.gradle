@@ -1,0 +1,3 @@
+rootProject.name = "OpenGLEStest"
+include ':app'
+include ':lib_camera'

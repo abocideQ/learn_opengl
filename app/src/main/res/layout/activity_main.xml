@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <TextureView
+        android:id="@+id/tv_surface"
+        android:layout_width="match_parent"
+        android:layout_height="500dp" />
+
+    <Button
+        android:id="@+id/bt_facing"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="10dp"
+        android:text="front"
+        android:textSize="12sp" />
+
+    <Button
+        android:id="@+id/bt_size"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/bt_facing"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="10dp"
+        android:text="size"
+        android:textSize="12sp" />
+
+    <Button
+        android:id="@+id/bt_capture"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/bt_size"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="10dp"
+        android:text="capture"
+        android:textSize="12sp" />
+</RelativeLayout>
