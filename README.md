@@ -1,3 +1,0 @@
-# opengltest
-# opengltest
-# opengltest
