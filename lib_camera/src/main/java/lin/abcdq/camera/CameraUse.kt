@@ -1,4 +1,4 @@
-package lin.abcdq.camera.camera
+package lin.abcdq.camera
 
 import android.content.Context
 import android.os.Build
@@ -6,6 +6,8 @@ import android.util.Size
 import android.view.Surface
 import android.view.TextureView
 import androidx.annotation.RequiresApi
+import lin.abcdq.camera.camera.CameraWrap
+import lin.abcdq.camera.camera.CameraWrapCall
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class CameraUse(context: Context) {
@@ -17,6 +19,10 @@ class CameraUse(context: Context) {
     fun open(surface: Surface) {
         mSurface = surface
         mCameraWrap.openCamera(mCameraWrap.facing, mSurface)
+    }
+
+    fun open() {
+        mCameraWrap.openCamera(mCameraWrap.facing, null)
     }
 
     fun close() {
@@ -65,8 +71,4 @@ class CameraUse(context: Context) {
     fun getPreviewSize(): Size? {
         return mCameraWrap.getPreviewSize()
     }
-
-//    fun open() {
-//        mCameraWrap.openCamera(mCameraWrap.facing, null)
-//    }
 }

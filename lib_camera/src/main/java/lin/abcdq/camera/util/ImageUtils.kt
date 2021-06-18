@@ -1,4 +1,4 @@
-package lin.abcdq.camera.camera
+package lin.abcdq.camera.util
 
 import android.graphics.ImageFormat
 import android.media.Image
@@ -9,7 +9,7 @@ import androidx.annotation.RequiresApi
 internal class ImageUtils {
 
     companion object {
-        fun YUV_420_888_data(image: Image): ByteArray {
+        fun image2YUV420888(image: Image): ByteArray {
             val imageWidth = image.width
             val imageHeight = image.height
             val planes = image.planes

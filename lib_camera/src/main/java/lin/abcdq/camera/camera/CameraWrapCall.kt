@@ -1,6 +1,6 @@
 package lin.abcdq.camera.camera
 
 interface CameraWrapCall {
-    fun preview(byteArray: ByteArray, width: Int, height: Int)
-    fun capture(byteArray: ByteArray, width: Int, height: Int)
+    fun onPreview(byteArray: ByteArray, width: Int, height: Int)
+    fun onCapture(byteArray: ByteArray, width: Int, height: Int)
 }

@@ -16,6 +16,7 @@ import android.util.Log
 import android.util.Size
 import android.view.Surface
 import androidx.annotation.RequiresApi
+import lin.abcdq.camera.util.ImageUtils
 import java.util.concurrent.Executor
 import kotlin.math.abs
 
@@ -58,36 +59,36 @@ internal class CameraWrap(context: Context) {
     fun openCamera(facing: String, surface: Surface?) {
         initHandler()
         mPreviewReader = ImageReader.newInstance(
-            mPreviewSize?.width ?: 1, mPreviewSize?.height ?: 1, IMAGE_FORMAT, 1
+            mPreviewSize?.width ?: 1, mPreviewSize?.height ?: 1, IMAGE_FORMAT, 2
         )
         mPreviewReader?.setOnImageAvailableListener(
             {
-                val image: Image = it.acquireLatestImage()
+                val image: Image = it.acquireLatestImage() ?: return@setOnImageAvailableListener
                 if (IMAGE_FORMAT == ImageFormat.YUV_420_888) {
-                    mCall?.preview(ImageUtils.YUV_420_888_data(image), image.width, image.height)
+                    mCall?.onPreview(ImageUtils.image2YUV420888(image), image.width, image.height)
                 } else if (IMAGE_FORMAT == ImageFormat.JPEG) {
                     val byteBuffer = image.planes[0].buffer
                     val byteArray = ByteArray(byteBuffer.remaining())
                     byteBuffer.get(byteArray)
-                    mCall?.preview(byteArray, image.width, image.height)
+                    mCall?.onPreview(byteArray, image.width, image.height)
                 }
                 image.close()
             },
             mHandler
         )
         mCaptureReader = ImageReader.newInstance(
-            mPreviewSize?.width ?: 1, mPreviewSize?.height ?: 1, IMAGE_FORMAT, 1
+            mPreviewSize?.width ?: 1, mPreviewSize?.height ?: 1, IMAGE_FORMAT, 2
         )
         mCaptureReader?.setOnImageAvailableListener(
             {
-                val image: Image = it.acquireLatestImage()
+                val image: Image = it.acquireLatestImage() ?: return@setOnImageAvailableListener
                 if (IMAGE_FORMAT == ImageFormat.YUV_420_888) {
-                    mCall?.capture(ImageUtils.YUV_420_888_data(image), image.width, image.height)
+                    mCall?.onCapture(ImageUtils.image2YUV420888(image), image.width, image.height)
                 } else if (IMAGE_FORMAT == ImageFormat.JPEG) {
                     val byteBuffer = image.planes[0].buffer
                     val byteArray = ByteArray(byteBuffer.remaining())
                     byteBuffer.get(byteArray)
-                    mCall?.capture(byteArray, image.width, image.height)
+                    mCall?.onCapture(byteArray, image.width, image.height)
                 }
                 image.close()
             },

@@ -1,27 +1,24 @@
 package lin.abcdq.openglestest
 
 import android.Manifest
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.SurfaceTexture
+import android.graphics.*
+import android.opengl.GLSurfaceView
 import android.os.Bundle
+import android.util.Log
 import android.view.Surface
 import android.view.TextureView
 import android.widget.Button
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
-import lin.abcdq.camera.camera.CameraUse
+import lin.abcdq.camera.CameraJni
+import lin.abcdq.camera.CameraUse
 import lin.abcdq.camera.camera.CameraWrapCall
-import java.nio.ByteBuffer
+import java.io.ByteArrayOutputStream
 
 
 class MainActivity : AppCompatActivity() {
 
-    private var mButtonFacing: Button? = null
-    private var mButtonSize: Button? = null
-    private var mButtonCapture: Button? = null
-    private var mCaptureImageView: ImageView? = null
-    private var mTextureView: TextureView? = null
+
     private val mCamera by lazy { CameraUse(this) }
 
     private var mSizePosition = -1
@@ -35,10 +32,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         requestPermissions(mPermissions, 100)
-        mButtonFacing = findViewById(R.id.bt_facing)
-        mButtonSize = findViewById(R.id.bt_size)
-        mButtonCapture = findViewById(R.id.bt_capture)
-        mCaptureImageView = findViewById(R.id.iv_capture)
+//        initTexture()
+        initGL()
+    }
+
+    private fun initTexture() {
+        val mButtonFacing = findViewById<Button>(R.id.bt_facing)
+        val mButtonSize = findViewById<Button>(R.id.bt_size)
+        val mButtonCapture = findViewById<Button>(R.id.bt_capture)
+        val mCaptureImageView = findViewById<ImageView>(R.id.iv_capture)
+        val mTextureView = findViewById<TextureView>(R.id.tv_surface)
         mButtonFacing?.setOnClickListener {
             mCamera.switch()
         }
@@ -63,18 +66,17 @@ class MainActivity : AppCompatActivity() {
         }
         mButtonCapture?.setOnClickListener {
             mCamera.setCall(object : CameraWrapCall {
-                override fun preview(byteArray: ByteArray, width: Int, height: Int) {
+                override fun onPreview(byteArray: ByteArray, width: Int, height: Int) {
 
                 }
 
-                override fun capture(byteArray: ByteArray, width: Int, height: Int) {
+                override fun onCapture(byteArray: ByteArray, width: Int, height: Int) {
                     val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
-                    runOnUiThread {  mCaptureImageView?.setImageBitmap(bitmap) }
+                    runOnUiThread { mCaptureImageView?.setImageBitmap(bitmap) }
                 }
             })
             mCamera.capture()
         }
-        mTextureView = findViewById(R.id.tv_surface)
         mTextureView?.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture, w: Int, g: Int) {
                 mCamera.open(Surface(surface))
@@ -90,6 +92,42 @@ class MainActivity : AppCompatActivity() {
             override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
             }
         }
+    }
+
+    private fun initGL() {
+        val mButtonFacing = findViewById<Button>(R.id.bt_facing)
+        val mButtonSize = findViewById<Button>(R.id.bt_size)
+        val mButtonCapture = findViewById<Button>(R.id.bt_capture)
+        val mCaptureImageView = findViewById<ImageView>(R.id.iv_capture)
+        mButtonFacing?.setOnClickListener {
+            mCamera.switch()
+        }
+        mButtonCapture?.setOnClickListener {
+            mCamera.capture()
+        }
+
+        val mRender = CameraJni()
+        val mGLSurfaceView = findViewById<GLSurfaceView>(R.id.glsv_surface)
+        mGLSurfaceView.setEGLContextClientVersion(3)
+        mGLSurfaceView.setRenderer(mRender)
+        mCamera.setCall(object : CameraWrapCall {
+            override fun onPreview(byteArray: ByteArray, width: Int, height: Int) {
+                mRender.preview(byteArray, width, height)
+            }
+
+            override fun onCapture(byteArray: ByteArray, width: Int, height: Int) {
+                try {
+                    val image = YuvImage(byteArray, ImageFormat.NV21, width, height, null)
+                    val buffer = ByteArrayOutputStream()
+                    image.compressToJpeg(Rect(0, 0, width, height), 100, buffer)
+                    val bitmap = BitmapFactory.decodeByteArray(buffer.toByteArray(), 0, buffer.size())
+                    runOnUiThread { mCaptureImageView?.setImageBitmap(bitmap) }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        })
+        mCamera.open()
     }
 
     private val mPermissions = arrayOf(

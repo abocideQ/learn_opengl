@@ -6,6 +6,11 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <android.opengl.GLSurfaceView
+        android:id="@+id/glsv_surface"
+        android:layout_width="match_parent"
+        android:layout_height="500dp" />
+
     <TextureView
         android:id="@+id/tv_surface"
         android:layout_width="match_parent"
@@ -42,6 +47,8 @@
 
     <ImageView
         android:id="@+id/iv_capture"
-        android:layout_width="100dp"
-        android:layout_height="100dp" />
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
 </RelativeLayout>
