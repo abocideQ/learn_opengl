@@ -4,7 +4,6 @@ import android.Manifest
 import android.graphics.*
 import android.opengl.GLSurfaceView
 import android.os.Bundle
-import android.util.Log
 import android.view.Surface
 import android.view.TextureView
 import android.widget.Button
@@ -13,7 +12,6 @@ import androidx.appcompat.app.AppCompatActivity
 import lin.abcdq.camera.CameraJni
 import lin.abcdq.camera.CameraUse
 import lin.abcdq.camera.camera.CameraWrapCall
-import java.io.ByteArrayOutputStream
 
 
 class MainActivity : AppCompatActivity() {
@@ -117,7 +115,11 @@ class MainActivity : AppCompatActivity() {
 
             override fun onCapture(byteArray: ByteArray, width: Int, height: Int) {
                 try {
-                    val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+                    var bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+                    val matrix = Matrix()
+                    matrix.postRotate(90f)
+                    bitmap =
+                        Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
                     runOnUiThread { mCaptureImageView?.setImageBitmap(bitmap) }
                 } catch (e: Exception) {
                     e.printStackTrace()
