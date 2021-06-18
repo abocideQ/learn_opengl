@@ -1,9 +1,14 @@
 package lin.abcdq.camera.util
 
 import android.graphics.ImageFormat
+import android.graphics.Rect
+import android.graphics.YuvImage
 import android.media.Image
 import android.os.Build
 import androidx.annotation.RequiresApi
+import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
+
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 internal class ImageUtils {
@@ -49,6 +54,42 @@ internal class ImageUtils {
                 }
             }
             return data
+        }
+
+        fun image2JPEG(image: Image): ByteArray? {
+            var data: ByteArray? = null
+            if (image.format == ImageFormat.JPEG) {
+                val planes = image.planes
+                val buffer: ByteBuffer = planes[0].buffer
+                data = ByteArray(buffer.capacity())
+                buffer.get(data)
+                return data
+            } else if (image.format == ImageFormat.YUV_420_888) {
+                data = NV21toJPEG(
+                    YUV_420_888toNV21(image),
+                    image.width, image.height
+                )
+            }
+            return data
+        }
+
+        private fun YUV_420_888toNV21(image: Image): ByteArray {
+            val nv21: ByteArray
+            val yBuffer: ByteBuffer = image.planes[0].buffer
+            val vuBuffer: ByteBuffer = image.planes[2].buffer
+            val ySize: Int = yBuffer.remaining()
+            val vuSize: Int = vuBuffer.remaining()
+            nv21 = ByteArray(ySize + vuSize)
+            yBuffer.get(nv21, 0, ySize)
+            vuBuffer.get(nv21, ySize, vuSize)
+            return nv21
+        }
+
+        private fun NV21toJPEG(nv21: ByteArray, width: Int, height: Int): ByteArray {
+            val out = ByteArrayOutputStream()
+            val yuv = YuvImage(nv21, ImageFormat.NV21, width, height, null)
+            yuv.compressToJpeg(Rect(0, 0, width, height), 100, out)
+            return out.toByteArray()
         }
     }
 }

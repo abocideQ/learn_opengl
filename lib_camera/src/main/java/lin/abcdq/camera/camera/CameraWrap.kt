@@ -83,7 +83,11 @@ internal class CameraWrap(context: Context) {
             {
                 val image: Image = it.acquireLatestImage() ?: return@setOnImageAvailableListener
                 if (IMAGE_FORMAT == ImageFormat.YUV_420_888) {
-                    mCall?.onCapture(ImageUtils.image2YUV420888(image), image.width, image.height)
+                    mCall?.onCapture(
+                        ImageUtils.image2JPEG(image) ?: return@setOnImageAvailableListener,
+                        image.width,
+                        image.height
+                    )
                 } else if (IMAGE_FORMAT == ImageFormat.JPEG) {
                     val byteBuffer = image.planes[0].buffer
                     val byteArray = ByteArray(byteBuffer.remaining())

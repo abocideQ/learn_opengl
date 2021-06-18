@@ -117,10 +117,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onCapture(byteArray: ByteArray, width: Int, height: Int) {
                 try {
-                    val image = YuvImage(byteArray, ImageFormat.NV21, width, height, null)
-                    val buffer = ByteArrayOutputStream()
-                    image.compressToJpeg(Rect(0, 0, width, height), 100, buffer)
-                    val bitmap = BitmapFactory.decodeByteArray(buffer.toByteArray(), 0, buffer.size())
+                    val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
                     runOnUiThread { mCaptureImageView?.setImageBitmap(bitmap) }
                 } catch (e: Exception) {
                     e.printStackTrace()
