@@ -11,8 +11,28 @@ const char *shaderVertexCamera =
         "gl_Position = viPosition * vMatrix;            \n"
         "fiTexCoord = viTexCoord;                       \n"
         "}                                              \n";
+const char *shaderFragmentCamera =
+        "#version 300 es                                \n"
+        "precision mediump float;                       \n"
+        "in vec2 fiTexCoord;                            \n"
+        "layout(location = 0) out vec4 fragColor;       \n"
+        "uniform sampler2D s_TextureMap;                \n"
+        "void main()                                    \n"
+        "{                                              \n"
+        "fragColor = texture(s_TextureMap, fiTexCoord); \n"
+        "}                                              \n";
+const char *shaderVertexCamera_fbo =
+        "#version 300 es                                \n"
+        "layout(location = 0) in vec4 viPosition;       \n"
+        "layout(location = 1) in vec2 viTexCoord;       \n"
+        "out vec2 fiTexCoord;                           \n"
+        "uniform mat4 vMatrix;                          \n"
+        "void main(){                                   \n"
+        "gl_Position = viPosition;                      \n"
+        "fiTexCoord = viTexCoord;                       \n"
+        "}                                              \n";
 //展示
-const char *shaderFragmentCameraDisplay =
+const char *shaderFragmentCameraDisplay_fbo =
         "#version 300 es                                \n"
         "precision highp float;                         \n"
         "in vec2 fiTexCoord;                            \n"
@@ -33,7 +53,7 @@ const char *shaderFragmentCameraDisplay =
         "fragColor = vec4(r, g, b, 1.0);                \n"
         "}                                              \n";
 //分屏
-const char *shaderFragmentCameraSplit =
+const char *shaderFragmentCameraSplit_fbo =
         "#version 300 es                                \n"
         "precision highp float;                         \n"
         "in vec2 fiTexCoord;                            \n"
@@ -74,10 +94,16 @@ const float LOCATION_VERTEX_CAMERA[] = {
         1.0f, 1.0f, 0.0f,
 };
 const float LOCATION_TEXTURE_CAMERA[] = {
-        0.0f, 0.0f,
         0.0f, 1.0f,
+        1.0f, 1.0f,
+        0.0f, 0.0f,
         1.0f, 0.0f,
-        1.0f, 1.0f
+};
+const float LOCATION_TEXTURE_CAMERA_FBO[] = {
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        0.0f, 1.0f,
+        1.0f, 1.0f,
 };
 const int LOCATION_INDICES[] = {
         0, 1, 2, 1, 3, 2
@@ -88,12 +114,16 @@ void CameraSample::onInit(int type) {
 }
 
 void CameraSample::onSurfaceCreated() {
+    m_Program_Camera = GLUtils::glProgram(shaderVertexCamera, shaderFragmentCamera);
     if (m_Type == 1) {
-        m_Program_Camera = GLUtils::glProgram(shaderVertexCamera, shaderFragmentCameraDisplay);
+        m_Program_Camera_FBO = GLUtils::glProgram(shaderVertexCamera_fbo,
+                                                  shaderFragmentCameraDisplay_fbo);
     } else if (m_Type == 2) {
-        m_Program_Camera = GLUtils::glProgram(shaderVertexCamera, shaderFragmentCameraSplit);
+        m_Program_Camera_FBO = GLUtils::glProgram(shaderVertexCamera_fbo,
+                                                  shaderFragmentCameraSplit_fbo);
     }
     if (m_Program_Camera == GL_NONE) return;
+    if (m_Program_Camera_FBO == GL_NONE) return;
 
     glGenBuffers(3, m_VBO_Camera);
     glBindBuffer(GL_ARRAY_BUFFER, m_VBO_Camera[0]);

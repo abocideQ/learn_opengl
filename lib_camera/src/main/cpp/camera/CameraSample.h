@@ -30,16 +30,24 @@ public:
 
 protected:
     int m_Type = 1;
-    GLuint m_Program_Camera;
-    GLuint m_Texture_Camera[3];
-    GLuint m_VBO_Camera[3];
-    GLuint m_VAO_Camera[1];
-    GLuint m_PBO_In[6];
-    GLuint m_PBO_Out[6];
-    int m_PBO = -1;
+
     uint8_t *m_buffer;
     int m_w;
     int m_h;
+
+    GLuint m_VBO_Camera[3];
+    GLuint m_VAO_Camera[1];
+
+    GLuint m_Program_Camera;
+    GLuint m_Texture_Camera[3];
+
+    GLuint m_Program_Camera_FBO;
+    GLuint m_Texture_Camera_FBO[3];
+
+    GLuint m_PBO_In_FBO[6];
+    GLuint m_PBO_Out_FBO[6];
+    int m_PBO_FBO = -1;
+
 private:
     static CameraSample *m_Sample;
 };
