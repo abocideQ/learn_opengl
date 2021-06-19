@@ -24,7 +24,7 @@ void native_OnPreview(JNIEnv *env, jobject obj, jbyteArray dataBytes, jint w, ji
     int length = env->GetArrayLength(dataBytes);
     uint8_t *buffer = new uint8_t[length];
     env->GetByteArrayRegion(dataBytes, 0, length, reinterpret_cast<jbyte *>(buffer));
-    CameraSample::instance()->onPreviewFrame(buffer, w, h);
+    CameraSample::instance()->onPreviewFrame(buffer, length, w, h);
 //    env->DeleteLocalRef(dataBytes);
 }
 

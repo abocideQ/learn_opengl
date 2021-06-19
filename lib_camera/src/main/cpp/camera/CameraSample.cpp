@@ -140,14 +140,46 @@ void CameraSample::onSurfaceCreated() {
     glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 1, 1, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
 }
 
-void CameraSample::onPreviewFrame(uint8_t *buffer, int w, int h) {
+void CameraSample::onPreviewFrame(uint8_t *buffer, int size, int w, int h) {
     m_buffer = buffer;
     m_w = w;
     m_h = h;
+    onPBOCreated(w, h);
 }
 
-void CameraSample::onCaptureFrame(uint8_t *buffer, int w, int h) {
+void CameraSample::onCaptureFrame(uint8_t *buffer, int size, int w, int h) {
+}
 
+void CameraSample::onPBOCreated(int w, int h) {
+    if (m_PBO != -1) return;
+    m_PBO = 0;
+    glGenBuffers(6, m_PBO_In);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[0]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, w * h, 0, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[1]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, w * h, 0, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[2]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, w * h * 5 / 4, 0, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[3]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, w * h * 5 / 4, 0, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[4]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, w * h * 3 / 2, 0, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[5]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, w * h * 3 / 2, 0, GL_STREAM_DRAW);
+    glGenBuffers(6, m_PBO_Out);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[0]);
+    glBufferData(GL_PIXEL_PACK_BUFFER, w * h, 0, GL_STREAM_READ);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[1]);
+    glBufferData(GL_PIXEL_PACK_BUFFER, w * h, 0, GL_STREAM_READ);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[2]);
+    glBufferData(GL_PIXEL_PACK_BUFFER, w * h * 5 / 4, 0, GL_STREAM_READ);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[3]);
+    glBufferData(GL_PIXEL_PACK_BUFFER, w * h * 5 / 4, 0, GL_STREAM_READ);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[4]);
+    glBufferData(GL_PIXEL_PACK_BUFFER, w * h * 3 / 2, 0, GL_STREAM_READ);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[5]);
+    glBufferData(GL_PIXEL_PACK_BUFFER, w * h * 3 / 2, 0, GL_STREAM_READ);
+    LOGCATE("asdasdasd  %d", m_PBO_In[0]);
 }
 
 void CameraSample::onSurfaceChanged(int w, int h) {
@@ -157,26 +189,77 @@ void CameraSample::onSurfaceChanged(int w, int h) {
 void CameraSample::onDraw() {
     if (m_Program_Camera == GL_NONE) return;
     if (m_buffer == nullptr) return;
+    if (m_PBO == -1) return;
     glClear(GL_STENCIL_BUFFER_BIT | GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(1.0, 1.0, 1.0, 1.0);
 
-    glUseProgram(m_Program_Camera);
+//    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_Texture_Camera[0]);
+//    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_w, m_h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+//                 m_buffer);
+    int size0 = m_w * m_h;
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[0]);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_w, m_h, GL_LUMINANCE, GL_UNSIGNED_BYTE, 0);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[1]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, size0, nullptr, GL_STREAM_DRAW);
+    GLubyte *ptr0 = (GLubyte *) glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0,
+                                                 size0,
+                                                 GL_MAP_WRITE_BIT |
+                                                 GL_MAP_INVALIDATE_BUFFER_BIT);
+    if (ptr0) {
+        memcpy(ptr0, m_buffer, static_cast<size_t>(size0));
+        glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    }
 
+//    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, m_Texture_Camera[1]);
+//    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_w / 2, m_h / 2, 0, GL_LUMINANCE,
+//                 GL_UNSIGNED_BYTE,
+//                 m_buffer + (m_w * m_h));
+    int size1 = m_w * m_h * 5 / 4;
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[2]);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_w / 2, m_h / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE, 0);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[3]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, size1, nullptr, GL_STREAM_DRAW);
+    GLubyte *ptr1 = (GLubyte *) glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0,
+                                                 size1,
+                                                 GL_MAP_WRITE_BIT |
+                                                 GL_MAP_INVALIDATE_BUFFER_BIT);
+    if (ptr1) {
+        memcpy(ptr1, m_buffer + (m_w * m_h), static_cast<size_t>(size1));
+        glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    }
+
+//    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, m_Texture_Camera[2]);
+//    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_w / 2, m_h / 2, 0, GL_LUMINANCE,
+//                 GL_UNSIGNED_BYTE,
+//                 m_buffer + (m_w * m_h * 5 / 4));
+    int size2 = m_w * m_h * 3 / 2;
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[4]);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_w / 2, m_h / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE, 0);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[5]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, size2, nullptr, GL_STREAM_DRAW);
+    GLubyte *ptr2 = (GLubyte *) glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0,
+                                                 size2,
+                                                 GL_MAP_WRITE_BIT |
+                                                 GL_MAP_INVALIDATE_BUFFER_BIT);
+    if (ptr2) {
+        memcpy(ptr2, m_buffer + (m_w * m_h * 5 / 4), static_cast<size_t>(size2));
+        glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    }
+
+    glUseProgram(m_Program_Camera);
     glBindVertexArray(m_VAO_Camera[0]);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_Texture_Camera[0]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_w, m_h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-                 m_buffer);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, m_Texture_Camera[1]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_w / 2, m_h / 2, 0, GL_LUMINANCE,
-                 GL_UNSIGNED_BYTE,
-                 m_buffer + (m_w * m_h));
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, m_Texture_Camera[2]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_w / 2, m_h / 2, 0, GL_LUMINANCE,
-                 GL_UNSIGNED_BYTE,
-                 m_buffer + (m_w * m_h * 5 / 4));
 
     GLint textureY = glGetUniformLocation(m_Program_Camera, "s_textureY");
     GLint textureU = glGetUniformLocation(m_Program_Camera, "s_textureU");
@@ -221,6 +304,7 @@ CameraSample *CameraSample::instance() {
     return m_Sample;
 }
 }
+
 
 
 
