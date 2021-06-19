@@ -9,6 +9,9 @@
 
 class CameraSample {
 public:
+
+    void onInit(int type);
+
     void onSurfaceCreated();
 
     void onPreviewFrame(uint8_t *buffer, int w, int h);
@@ -24,6 +27,7 @@ public:
     static CameraSample *instance();
 
 protected:
+    int m_Type = 1;
     GLuint m_Program_Camera;
     GLuint m_Texture_Camera[3];
     GLuint m_VBO_Camera[3];

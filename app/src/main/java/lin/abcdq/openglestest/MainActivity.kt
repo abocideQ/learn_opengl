@@ -1,37 +1,67 @@
 package lin.abcdq.openglestest
 
 import android.Manifest
+import android.app.Activity
+import android.content.Context
+import android.content.Intent
 import android.graphics.*
 import android.opengl.GLSurfaceView
 import android.os.Bundle
+import android.util.Log
 import android.view.Surface
 import android.view.TextureView
 import android.widget.Button
 import android.widget.ImageView
+import android.widget.RelativeLayout
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import lin.abcdq.camera.CameraJni
 import lin.abcdq.camera.CameraUse
 import lin.abcdq.camera.camera.CameraWrapCall
-
-
+//https://www.jianshu.com/u/d82c936b6b71
 class MainActivity : AppCompatActivity() {
 
-
-    private val mCamera by lazy { CameraUse(this) }
-
-    private var mSizePosition = -1
-
-    override fun onDestroy() {
-        super.onDestroy()
-        mCamera.close()
+    companion object {
+        private var mType = 0;//0:textureView 1:opengl 2: opengl split
+        fun startActivity(context: Activity) {
+            val intent = Intent(context, MainActivity::class.java)
+            intent.putExtra("type", mType)
+            context.startActivity(intent)
+            context.finish()
+        }
     }
+
+    private lateinit var mCamera: CameraUse
+    private var mPosition = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         requestPermissions(mPermissions, 100)
-//        initTexture()
-        initGL()
+        val mButtonNext = findViewById<Button>(R.id.bt_next)
+        mButtonNext.setOnClickListener {
+            mCamera.close()
+            if (mType < 2) mType++
+            else mType = 0
+            startActivity(this)
+        }
+        mCamera = CameraUse(this)
+        val textView = findViewById<TextView>(R.id.tv_title)
+        mType = intent.getIntExtra("type", 0)
+        when (mType) {
+            0 -> {
+                textView.text = "TextureView 渲染"
+                initTexture()
+            }
+            1 -> {
+                textView.text = "opengles 渲染"
+                initGL(1)
+            }
+            2 -> {
+                textView.text = "opengles 分屏渲染"
+                initGL(2)
+            }
+        }
     }
 
     private fun initTexture() {
@@ -39,27 +69,29 @@ class MainActivity : AppCompatActivity() {
         val mButtonSize = findViewById<Button>(R.id.bt_size)
         val mButtonCapture = findViewById<Button>(R.id.bt_capture)
         val mCaptureImageView = findViewById<ImageView>(R.id.iv_capture)
-        val mTextureView = findViewById<TextureView>(R.id.tv_surface)
+        val mContainer = findViewById<RelativeLayout>(R.id.rl_surface_container)
+        val mTextureView = TextureView(this)
+        mContainer.addView(mTextureView)
         mButtonFacing?.setOnClickListener {
             mCamera.switch()
         }
         mButtonSize?.setOnClickListener {
-            if (mSizePosition == -1) {
+            if (mPosition == -1) {
                 for (size in mCamera.getPreviewSizes() ?: return@setOnClickListener) {
                     if (size.width == mCamera.getPreviewSize()?.width && size.height == mCamera.getPreviewSize()?.height) {
                         break
                     }
-                    mSizePosition++
+                    mPosition++
                 }
             }
-            if (mSizePosition + 1 >= mCamera.getPreviewSizes()?.size ?: 0 || mSizePosition < 0) {
-                mSizePosition = 0
+            if (mPosition + 1 >= mCamera.getPreviewSizes()?.size ?: 0 || mPosition < 0) {
+                mPosition = 0
             } else {
-                mSizePosition++
+                mPosition++
             }
             mCamera.resize(
-                mCamera.getPreviewSizes()?.get(mSizePosition) ?: return@setOnClickListener,
-                mTextureView ?: return@setOnClickListener
+                mCamera.getPreviewSizes()?.get(mPosition) ?: return@setOnClickListener,
+                mTextureView
             )
         }
         mButtonCapture?.setOnClickListener {
@@ -71,11 +103,12 @@ class MainActivity : AppCompatActivity() {
                 override fun onCapture(byteArray: ByteArray, width: Int, height: Int) {
                     val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
                     runOnUiThread { mCaptureImageView?.setImageBitmap(bitmap) }
+                    mCamera.invalidate()
                 }
             })
             mCamera.capture()
         }
-        mTextureView?.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
+        mTextureView.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture, w: Int, g: Int) {
                 mCamera.open(Surface(surface))
             }
@@ -92,25 +125,45 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun initGL() {
+    private fun initGL(type: Int) {
         val mButtonFacing = findViewById<Button>(R.id.bt_facing)
         val mButtonSize = findViewById<Button>(R.id.bt_size)
         val mButtonCapture = findViewById<Button>(R.id.bt_capture)
         val mCaptureImageView = findViewById<ImageView>(R.id.iv_capture)
+        val mRender = CameraJni()
+        mRender.onInit(type)
+        val mContainer = findViewById<RelativeLayout>(R.id.rl_surface_container)
+        val mGLSurfaceView = GLSurfaceView(this)
+        mContainer.addView(mGLSurfaceView)
+        mGLSurfaceView.setEGLContextClientVersion(3)
+        mGLSurfaceView.setRenderer(mRender)
         mButtonFacing?.setOnClickListener {
             mCamera.switch()
+        }
+        mButtonSize?.setOnClickListener {
+            if (mPosition == -1) {
+                for (size in mCamera.getPreviewSizes() ?: return@setOnClickListener) {
+                    if (size.width == mCamera.getPreviewSize()?.width && size.height == mCamera.getPreviewSize()?.height) {
+                        break
+                    }
+                    mPosition++
+                }
+            }
+            if (mPosition + 1 >= mCamera.getPreviewSizes()?.size ?: 0 || mPosition < 0) {
+                mPosition = 0
+            } else {
+                mPosition++
+            }
+            mCamera.resize(
+                mCamera.getPreviewSizes()?.get(mPosition) ?: return@setOnClickListener
+            )
         }
         mButtonCapture?.setOnClickListener {
             mCamera.capture()
         }
-
-        val mRender = CameraJni()
-        val mGLSurfaceView = findViewById<GLSurfaceView>(R.id.glsv_surface)
-        mGLSurfaceView.setEGLContextClientVersion(3)
-        mGLSurfaceView.setRenderer(mRender)
         mCamera.setCall(object : CameraWrapCall {
             override fun onPreview(byteArray: ByteArray, width: Int, height: Int) {
-                mRender.preview(byteArray, width, height)
+                mRender.onPreview(byteArray, width, height)
             }
 
             override fun onCapture(byteArray: ByteArray, width: Int, height: Int) {
@@ -121,6 +174,7 @@ class MainActivity : AppCompatActivity() {
                     bitmap =
                         Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
                     runOnUiThread { mCaptureImageView?.setImageBitmap(bitmap) }
+                    mCamera.invalidate()
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }

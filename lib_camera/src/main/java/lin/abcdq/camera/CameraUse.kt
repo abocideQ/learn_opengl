@@ -26,6 +26,8 @@ class CameraUse(context: Context) {
     }
 
     fun close() {
+        mCameraSizes = null
+        mSurface = null
         mCameraWrap.stopCamera()
     }
 
@@ -37,6 +39,12 @@ class CameraUse(context: Context) {
         mCameraWrap.capture()
     }
 
+    fun invalidate() {
+        mCameraWrap.stopCamera()
+        if (mSurface == null) mCameraWrap.openCamera(mCameraWrap.facing, null)
+        else mCameraWrap.openCamera(mCameraWrap.facing, mSurface)
+    }
+
     fun switch() {
         mCameraWrap.stopCamera()
         mCameraWrap.facing = when (mCameraWrap.facing) {
@@ -44,7 +52,8 @@ class CameraUse(context: Context) {
             CameraWrap.CAMERA_BACK -> CameraWrap.CAMERA_FRONT
             else -> CameraWrap.CAMERA_EXTERNAL
         }
-        mCameraWrap.openCamera(mCameraWrap.facing, mSurface)
+        if (mSurface == null) mCameraWrap.openCamera(mCameraWrap.facing, null)
+        else mCameraWrap.openCamera(mCameraWrap.facing, mSurface)
     }
 
     fun resize(size: Size, textureView: TextureView) {
@@ -60,7 +69,7 @@ class CameraUse(context: Context) {
         mCameraWrap.stopCamera()
         mCameraWrap.updatePreviewSize(size)
         mCameraWrap.updateCaptureSize(size)
-        mCameraWrap.openCamera(mCameraWrap.facing, mSurface)
+        mCameraWrap.openCamera(mCameraWrap.facing, null)
     }
 
     fun getPreviewSizes(): Array<Size>? {

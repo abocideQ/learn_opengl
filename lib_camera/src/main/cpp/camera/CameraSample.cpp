@@ -11,7 +11,8 @@ const char *shaderVertexCamera =
         "gl_Position = viPosition * vMatrix;            \n"
         "fiTexCoord = viTexCoord;                       \n"
         "}                                              \n";
-const char *shaderFragmentCamera =
+//展示
+const char *shaderFragmentCameraDisplay =
         "#version 300 es                                \n"
         "precision highp float;                         \n"
         "in vec2 fiTexCoord;                            \n"
@@ -31,6 +32,41 @@ const char *shaderFragmentCamera =
         "b = y + 1.770 * u;                             \n"
         "fragColor = vec4(r, g, b, 1.0);                \n"
         "}                                              \n";
+//分屏
+const char *shaderFragmentCameraSplit =
+        "#version 300 es                                \n"
+        "precision highp float;                         \n"
+        "in vec2 fiTexCoord;                            \n"
+        "uniform sampler2D s_textureY;                  \n"
+        "uniform sampler2D s_textureU;                  \n"
+        "uniform sampler2D s_textureV;                  \n"
+        "out vec4 fragColor;                            \n"
+        "vec4 YUV420888toRGB(vec2 texCoord){            \n"
+        "float y, u, v, r, g, b;                        \n"
+        "y = texture(s_textureY, texCoord).r;           \n"
+        "u = texture(s_textureU, texCoord).r;           \n"
+        "v = texture(s_textureV, texCoord).r;           \n"
+        "u = u - 0.5;                                   \n"
+        "v = v - 0.5;                                   \n"
+        "r = y + 1.403 * v;                             \n"
+        "g = y - 0.344 * u - 0.714 * v;                 \n"
+        "b = y + 1.770 * u;                             \n"
+        "return vec4(r, g, b, 1.0);                     \n"
+        "}                                              \n"
+        "void main(){                                   \n"
+        "vec2 newTexCoord = fiTexCoord;                 \n"
+        "if (newTexCoord.x < 0.5){                      \n"
+        "newTexCoord.x = newTexCoord.x * 2.0;           \n"
+        "}else{                                         \n"
+        "newTexCoord.x = (newTexCoord.x - 0.5) * 2.0;   \n"
+        "}                                              \n"
+        "if (newTexCoord.y < 0.5){                      \n"
+        "newTexCoord.y = newTexCoord.y * 2.0;           \n"
+        "}else{                                         \n"
+        "newTexCoord.y = (newTexCoord.y - 0.5) * 2.0;   \n"
+        "}                                              \n"
+        "fragColor = YUV420888toRGB(newTexCoord);       \n"
+        "}                                              \n";
 const float LOCATION_VERTEX_CAMERA[] = {
         -1.0f, -1.0f, 0.0f,
         1.0f, -1.0f, 0.0f,
@@ -46,8 +82,17 @@ const float LOCATION_TEXTURE_CAMERA[] = {
 const int LOCATION_INDICES[] = {
         0, 1, 2, 1, 3, 2
 };
+
+void CameraSample::onInit(int type) {
+    m_Type = type;
+}
+
 void CameraSample::onSurfaceCreated() {
-    m_Program_Camera = GLUtils::glProgram(shaderVertexCamera, shaderFragmentCamera);
+    if (m_Type == 1) {
+        m_Program_Camera = GLUtils::glProgram(shaderVertexCamera, shaderFragmentCameraDisplay);
+    } else if (m_Type == 2) {
+        m_Program_Camera = GLUtils::glProgram(shaderVertexCamera, shaderFragmentCameraSplit);
+    }
     if (m_Program_Camera == GL_NONE) return;
 
     glGenBuffers(3, m_VBO_Camera);
@@ -155,7 +200,19 @@ void CameraSample::onDraw() {
 }
 
 void CameraSample::onDestroy() {
-
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, GL_NONE);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, GL_NONE);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, GL_NONE);
+    glDeleteTextures(3, m_Texture_Camera);
+    glDeleteBuffers(3, m_VBO_Camera);
+    glDeleteVertexArrays(1, m_VAO_Camera);
+    glDeleteProgram(m_Program_Camera);
+    free(m_Texture_Camera);
+    free(m_VBO_Camera);
+    free(m_VAO_Camera);
 }
 
 CameraSample *CameraSample::m_Sample = nullptr;
@@ -164,6 +221,7 @@ CameraSample *CameraSample::instance() {
     return m_Sample;
 }
 }
+
 
 
 

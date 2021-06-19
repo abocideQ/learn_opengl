@@ -63,16 +63,18 @@ internal class CameraWrap(context: Context) {
         )
         mPreviewReader?.setOnImageAvailableListener(
             {
-                val image: Image = it.acquireLatestImage() ?: return@setOnImageAvailableListener
-                if (IMAGE_FORMAT == ImageFormat.YUV_420_888) {
-                    mCall?.onPreview(ImageUtils.image2YUV420888(image), image.width, image.height)
-                } else if (IMAGE_FORMAT == ImageFormat.JPEG) {
-                    val byteBuffer = image.planes[0].buffer
-                    val byteArray = ByteArray(byteBuffer.remaining())
-                    byteBuffer.get(byteArray)
-                    mCall?.onPreview(byteArray, image.width, image.height)
+                val image: Image? = it.acquireLatestImage()
+                if (image != null) {
+                    if (IMAGE_FORMAT == ImageFormat.YUV_420_888) {
+                        mCall?.onPreview(ImageUtils.image2YUV420888(image), image.width, image.height)
+                    } else if (IMAGE_FORMAT == ImageFormat.JPEG) {
+                        val byteBuffer = image.planes[0].buffer
+                        val byteArray = ByteArray(byteBuffer.remaining())
+                        byteBuffer.get(byteArray)
+                        mCall?.onPreview(byteArray, image.width, image.height)
+                    }
+                    image.close()
                 }
-                image.close()
             },
             mHandler
         )
@@ -81,20 +83,22 @@ internal class CameraWrap(context: Context) {
         )
         mCaptureReader?.setOnImageAvailableListener(
             {
-                val image: Image = it.acquireLatestImage() ?: return@setOnImageAvailableListener
-                if (IMAGE_FORMAT == ImageFormat.YUV_420_888) {
-                    mCall?.onCapture(
-                        ImageUtils.image2JPEG(image) ?: return@setOnImageAvailableListener,
-                        image.width,
-                        image.height
-                    )
-                } else if (IMAGE_FORMAT == ImageFormat.JPEG) {
-                    val byteBuffer = image.planes[0].buffer
-                    val byteArray = ByteArray(byteBuffer.remaining())
-                    byteBuffer.get(byteArray)
-                    mCall?.onCapture(byteArray, image.width, image.height)
+                val image: Image? = it.acquireLatestImage()
+                if (image != null) {
+                    if (IMAGE_FORMAT == ImageFormat.YUV_420_888) {
+                        mCall?.onCapture(
+                            ImageUtils.image2JPEG(image) ?: return@setOnImageAvailableListener,
+                            image.width,
+                            image.height
+                        )
+                    } else if (IMAGE_FORMAT == ImageFormat.JPEG) {
+                        val byteBuffer = image.planes[0].buffer
+                        val byteArray = ByteArray(byteBuffer.remaining())
+                        byteBuffer.get(byteArray)
+                        mCall?.onCapture(byteArray, image.width, image.height)
+                    }
+                    image.close()
                 }
-                image.close()
             },
             mHandler
         )
@@ -242,11 +246,11 @@ internal class CameraWrap(context: Context) {
                 }
                 CameraCharacteristics.LENS_FACING_BACK -> {
                     CAMERA_BACK = id
-                    mCameras[CAMERA_FRONT] = characteristics
+                    mCameras[CAMERA_BACK] = characteristics
                 }
                 else -> {
                     CAMERA_EXTERNAL = id
-                    mCameras[CAMERA_FRONT] = characteristics
+                    mCameras[CAMERA_EXTERNAL] = characteristics
                 }
             }
             this.facing = CAMERA_BACK

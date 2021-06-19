@@ -1,54 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <android.opengl.GLSurfaceView
-        android:id="@+id/glsv_surface"
+    <TextView
+        android:id="@+id/tv_title"
         android:layout_width="match_parent"
-        android:layout_height="500dp" />
+        android:layout_height="40dp"
+        android:background="@color/purple_200"
+        android:gravity="center"
+        android:textColor="#FFFF4750"
+        android:textSize="14sp" />
 
-    <TextureView
-        android:id="@+id/tv_surface"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="500dp" />
+        android:layout_height="match_parent">
 
-    <Button
-        android:id="@+id/bt_facing"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="10dp"
-        android:text="front"
-        android:textSize="12sp" />
+        <RelativeLayout
+            android:id="@+id/rl_surface_container"
+            android:layout_width="match_parent"
+            android:layout_height="500dp" />
 
-    <Button
-        android:id="@+id/bt_size"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/bt_facing"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="10dp"
-        android:text="size"
-        android:textSize="12sp" />
+        <Button
+            android:id="@+id/bt_facing"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="10dp"
+            android:text="front"
+            android:textSize="12sp" />
 
-    <Button
-        android:id="@+id/bt_capture"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/bt_size"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="10dp"
-        android:text="capture"
-        android:textSize="12sp" />
+        <Button
+            android:id="@+id/bt_size"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/bt_facing"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="10dp"
+            android:text="size"
+            android:textSize="12sp" />
 
-    <ImageView
-        android:id="@+id/iv_capture"
-        android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
-</RelativeLayout>
+        <Button
+            android:id="@+id/bt_capture"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/bt_size"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="10dp"
+            android:text="capture"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/bt_next"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/bt_capture"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="10dp"
+            android:text="next"
+            android:textSize="12sp" />
+
+        <RelativeLayout
+            android:id="@+id/rl_capture_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <ImageView
+            android:id="@+id/iv_capture"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true" />
+    </RelativeLayout>
+</LinearLayout>
