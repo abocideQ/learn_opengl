@@ -223,48 +223,20 @@ void CameraSample::onSurfaceCreated() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     GL_ERROR_CHECK();
+
+    //pbo
+    glGenBuffers(2, m_PBO_In);
+    glGenBuffers(2, m_PBO_Out);
+    GL_ERROR_CHECK();
 }
 
 void CameraSample::onPreviewFrame(uint8_t *buffer, int size, int w, int h) {
     m_buffer = buffer;
     m_w = w;
     m_h = h;
-    onPBOCreated(w, h);
 }
 
 void CameraSample::onCaptureFrame(uint8_t *buffer, int size, int w, int h) {
-}
-
-void CameraSample::onPBOCreated(int w, int h) {
-    if (m_PBO != -1) return;
-    m_PBO = 0;
-    //pbo
-//    glGenBuffers(6, m_PBO_In);
-//    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[0]);
-//    glBufferData(GL_PIXEL_UNPACK_BUFFER, w * h, 0, GL_STREAM_DRAW);
-//    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[1]);
-//    glBufferData(GL_PIXEL_UNPACK_BUFFER, w * h, 0, GL_STREAM_DRAW);
-//    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[2]);
-//    glBufferData(GL_PIXEL_UNPACK_BUFFER, w * h * 5 / 4, 0, GL_STREAM_DRAW);
-//    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[3]);
-//    glBufferData(GL_PIXEL_UNPACK_BUFFER, w * h * 5 / 4, 0, GL_STREAM_DRAW);
-//    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[4]);
-//    glBufferData(GL_PIXEL_UNPACK_BUFFER, w * h * 3 / 2, 0, GL_STREAM_DRAW);
-//    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[5]);
-//    glBufferData(GL_PIXEL_UNPACK_BUFFER, w * h * 3 / 2, 0, GL_STREAM_DRAW);
-//    glGenBuffers(6, m_PBO_Out);
-//    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[0]);
-//    glBufferData(GL_PIXEL_PACK_BUFFER, w * h, 0, GL_STREAM_READ);
-//    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[1]);
-//    glBufferData(GL_PIXEL_PACK_BUFFER, w * h, 0, GL_STREAM_READ);
-//    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[2]);
-//    glBufferData(GL_PIXEL_PACK_BUFFER, w * h * 5 / 4, 0, GL_STREAM_READ);
-//    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[3]);
-//    glBufferData(GL_PIXEL_PACK_BUFFER, w * h * 5 / 4, 0, GL_STREAM_READ);
-//    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[4]);
-//    glBufferData(GL_PIXEL_PACK_BUFFER, w * h * 3 / 2, 0, GL_STREAM_READ);
-//    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[5]);
-//    glBufferData(GL_PIXEL_PACK_BUFFER, w * h * 3 / 2, 0, GL_STREAM_READ);
 }
 
 void CameraSample::onSurfaceChanged(int w, int h) {
@@ -276,25 +248,58 @@ void CameraSample::onDraw() {
     if (m_Program_Camera == GL_NONE) return;
     if (m_Program_Camera_FBO == GL_NONE) return;
     if (m_buffer == nullptr) return;
-    if (m_PBO == -1) return;
-
-//    glBindTexture(GL_TEXTURE_2D, m_Texture_Camera[0]);
-//    int size0 = m_w * m_h;
-//    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[0]);
-//    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_w, m_h, GL_LUMINANCE, GL_UNSIGNED_BYTE, 0);
-//    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[1]);
-//    glBufferData(GL_PIXEL_UNPACK_BUFFER, size0, nullptr, GL_STREAM_DRAW);
-//    GLubyte *ptr0 = (GLubyte *) glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0,
-//                                                 size0,
-//                                                 GL_MAP_WRITE_BIT |
-//                                                 GL_MAP_INVALIDATE_BUFFER_BIT);
-//    if (ptr0) {
-//        memcpy(ptr0, m_buffer, static_cast<size_t>(size0));
-//        glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
-//        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-//    }
-
-//    glBindTexture(GL_TEXTURE_2D, m_Texture_Camera[1])
+    //pbo
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[0]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h, 0, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[1]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h, 0, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[2]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h * 5 / 4, 0, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[3]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h * 5 / 4, 0, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[4]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h * 3 / 2, 0, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[5]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h * 3 / 2, 0, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[0]);
+    glBufferData(GL_PIXEL_PACK_BUFFER, m_w * m_h, 0, GL_STREAM_READ);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[1]);
+    glBufferData(GL_PIXEL_PACK_BUFFER, m_w * m_h, 0, GL_STREAM_READ);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[2]);
+    glBufferData(GL_PIXEL_PACK_BUFFER, m_w * m_h * 5 / 4, 0, GL_STREAM_READ);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[3]);
+    glBufferData(GL_PIXEL_PACK_BUFFER, m_w * m_h * 5 / 4, 0, GL_STREAM_READ);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[4]);
+    glBufferData(GL_PIXEL_PACK_BUFFER, m_w * m_h * 3 / 2, 0, GL_STREAM_READ);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[5]);
+    glBufferData(GL_PIXEL_PACK_BUFFER, m_w * m_h * 3 / 2, 0, GL_STREAM_READ);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    //offscreen size set
+    glBindTexture(GL_TEXTURE_2D, m_Texture_Camera_FBO[0]);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                           m_Texture_Camera_FBO[0], 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_w, m_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    //normal fbo+pbo
+    int index = m_PBO_Index % 2;
+    int nextIndex = (index + 1) % 2;
+    glBindTexture(GL_TEXTURE_2D, m_Texture_Camera[0]);
+    int size0 = m_w * m_h;
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[index]);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_w, m_h, GL_LUMINANCE, GL_UNSIGNED_BYTE, 0);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[nextIndex]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, size0, nullptr, GL_STREAM_DRAW);
+    GLubyte *ptr0 = (GLubyte *) glMapBufferRange(GL_PIXEL_UNPACK_BUFFER, 0,
+                                                 size0,
+                                                 GL_MAP_WRITE_BIT |
+                                                 GL_MAP_INVALIDATE_BUFFER_BIT);
+    if (ptr0) {
+        memcpy(ptr0, m_buffer, static_cast<size_t>(size0));
+        glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    }
+    m_PBO_Index++;
+//    glBindTexture(GL_TEXTURE_2D, m_Texture_Camera[1]);
 //    int size1 = m_w * m_h * 5 / 4;
 //    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[2]);
 //    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_w / 2, m_h / 2, GL_LUMINANCE, GL_UNSIGNED_BYTE, 0);
@@ -309,7 +314,6 @@ void CameraSample::onDraw() {
 //        glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 //        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 //    }
-
 //    glBindTexture(GL_TEXTURE_2D, m_Texture_Camera[2]);
 //    int size2 = m_w * m_h * 3 / 2;
 //    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[4]);
@@ -325,23 +329,18 @@ void CameraSample::onDraw() {
 //        glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
 //        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 //    }
-    //offscreen
-    glBindTexture(GL_TEXTURE_2D, m_Texture_Camera_FBO[0]);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                           m_Texture_Camera_FBO[0], 0);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_w, m_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-    //normal
-    glBindTexture(GL_TEXTURE_2D, m_Texture_Camera[0]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_w, m_h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-                 m_buffer);
-    glBindTexture(GL_TEXTURE_2D, m_Texture_Camera[1]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_w / 2, m_h / 2, 0, GL_LUMINANCE,
-                 GL_UNSIGNED_BYTE,
-                 m_buffer + (m_w * m_h));
-    glBindTexture(GL_TEXTURE_2D, m_Texture_Camera[2]);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_w / 2, m_h / 2, 0, GL_LUMINANCE,
-                 GL_UNSIGNED_BYTE,
-                 m_buffer + (m_w * m_h * 5 / 4));
+    //normal fbo
+//    glBindTexture(GL_TEXTURE_2D, m_Texture_Camera[0]);
+//    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_w, m_h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
+//                 m_buffer);
+//    glBindTexture(GL_TEXTURE_2D, m_Texture_Camera[1]);
+//    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_w / 2, m_h / 2, 0, GL_LUMINANCE,
+//                 GL_UNSIGNED_BYTE,
+//                 m_buffer + (m_w * m_h));
+//    glBindTexture(GL_TEXTURE_2D, m_Texture_Camera[2]);
+//    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, m_w / 2, m_h / 2, 0, GL_LUMINANCE,
+//                 GL_UNSIGNED_BYTE,
+//                 m_buffer + (m_w * m_h * 5 / 4));
     //offscreen
     glViewport(0, 0, m_w, m_h);
     glBindFramebuffer(GL_FRAMEBUFFER, m_FBO[0]);

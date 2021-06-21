@@ -18,8 +18,6 @@ public:
 
     void onCaptureFrame(uint8_t *buffer, int size, int w, int h);
 
-    void onPBOCreated(int w, int h);
-
     void onSurfaceChanged(int w, int h);
 
     void onDraw();
@@ -47,10 +45,10 @@ protected:
     GLuint m_Texture_Camera_FBO[1];
     GLuint m_VAO_Camera_FBO[1];
     GLuint m_FBO[1];
+
     GLuint m_PBO_In[6];
     GLuint m_PBO_Out[6];
-    int m_PBO = -1;
-
+    int m_PBO_Index = -1;
 private:
     static CameraSample *m_Sample;
 };
