@@ -25,6 +25,10 @@ class CameraJni : GLSurfaceView.Renderer {
         native_OnPreview(dataBytes, w, h)
     }
 
+    fun onCapture(): ByteArray? {
+        return native_OnCapture()
+    }
+
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         native_OnSurfaceCreated()
     }
@@ -50,6 +54,8 @@ class CameraJni : GLSurfaceView.Renderer {
     private external fun native_OnDrawFrame()
 
     private external fun native_OnPreview(dataBytes: ByteArray, w: Int, h: Int)
+
+    private external fun native_OnCapture(): ByteArray?
 
     private external fun native_OnDestroy()
 }

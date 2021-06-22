@@ -16,7 +16,9 @@ public:
 
     void onPreviewFrame(uint8_t *buffer, int size, int w, int h);
 
-    void onCaptureFrame(uint8_t *buffer, int size, int w, int h);
+    uint8_t *onCaptureFrame();
+
+    int onCaptureFrameLength();
 
     void onSurfaceChanged(int w, int h);
 
@@ -29,6 +31,8 @@ public:
 protected:
     int m_Type = 1;
 
+    uint8_t *m_FboBuffer;
+    int m_FboBufferSize;
     uint8_t *m_buffer;
     int m_w;
     int m_h;
@@ -47,8 +51,8 @@ protected:
     GLuint m_FBO[1];
 
     GLuint m_PBO_In[6];
-    GLuint m_PBO_Out[6];
-    int m_PBO_Index = -1;
+    GLuint m_PBO_Out[2];
+    int m_PBO_Index = 0;
 private:
     static CameraSample *m_Sample;
 };

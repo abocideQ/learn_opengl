@@ -28,6 +28,15 @@ void native_OnPreview(JNIEnv *env, jobject obj, jbyteArray dataBytes, jint w, ji
 //    env->DeleteLocalRef(dataBytes);
 }
 
+jbyteArray native_OnCapture(JNIEnv *env, jobject obj) {
+    uint8_t *buffer = CameraSample::instance()->onCaptureFrame();
+    if (buffer == nullptr) return nullptr;
+    int length = CameraSample::instance()->onCaptureFrameLength();
+    jbyteArray data = env->NewByteArray(length);
+    env->SetByteArrayRegion(data, 0, length, reinterpret_cast<jbyte *>(buffer));
+    return data;
+}
+
 void native_OnDestroy(JNIEnv *env, jobject obj) {
     CameraSample::instance()->onDestroy();
 }
@@ -41,6 +50,7 @@ JNINativeMethod JNI_Methods[] = {
         {"native_OnSurfaceChanged", "(II)V",   (void *) native_OnSurfaceChanged},
         {"native_OnDrawFrame",      "()V",     (void *) native_OnDrawFrame},
         {"native_OnPreview",        "([BII)V", (void *) native_OnPreview},
+        {"native_OnCapture",        "()[B",    (void *) native_OnCapture},
         {"native_OnDestroy",        "()V",     (void *) native_OnDestroy},
 };
 #define JNI_LENGTH(n) (sizeof(n)/sizeof(n[0]))

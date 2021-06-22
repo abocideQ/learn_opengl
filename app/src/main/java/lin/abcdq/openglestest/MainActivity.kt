@@ -18,6 +18,9 @@ import androidx.appcompat.app.AppCompatActivity
 import lin.abcdq.camera.CameraJni
 import lin.abcdq.camera.CameraUse
 import lin.abcdq.camera.camera.CameraWrapCall
+import java.io.File
+import java.io.FileOutputStream
+
 //https://www.jianshu.com/u/d82c936b6b71
 class MainActivity : AppCompatActivity() {
 
@@ -32,6 +35,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private lateinit var mCamera: CameraUse
+    private var mRender: CameraJni? = null
     private var mPosition = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -130,8 +134,8 @@ class MainActivity : AppCompatActivity() {
         val mButtonSize = findViewById<Button>(R.id.bt_size)
         val mButtonCapture = findViewById<Button>(R.id.bt_capture)
         val mCaptureImageView = findViewById<ImageView>(R.id.iv_capture)
-        val mRender = CameraJni()
-        mRender.onInit(type)
+        mRender = CameraJni()
+        mRender?.onInit(type)
         val mContainer = findViewById<RelativeLayout>(R.id.rl_surface_container)
         val mGLSurfaceView = GLSurfaceView(this)
         mContainer.addView(mGLSurfaceView)
@@ -159,25 +163,29 @@ class MainActivity : AppCompatActivity() {
             )
         }
         mButtonCapture?.setOnClickListener {
-            mCamera.capture()
+//            mCamera.capture()
+            val byteArray = mRender?.onCapture() ?: return@setOnClickListener
+            val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+            saveBitmap(bitmap)
+            runOnUiThread { mCaptureImageView?.setImageBitmap(bitmap) }
         }
         mCamera.setCall(object : CameraWrapCall {
             override fun onPreview(byteArray: ByteArray, width: Int, height: Int) {
-                mRender.onPreview(byteArray, width, height)
+                mRender?.onPreview(byteArray, width, height)
             }
 
             override fun onCapture(byteArray: ByteArray, width: Int, height: Int) {
-                try {
-                    var bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
-                    val matrix = Matrix()
-                    matrix.postRotate(90f)
-                    bitmap =
-                        Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-                    runOnUiThread { mCaptureImageView?.setImageBitmap(bitmap) }
-                    mCamera.invalidate()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+//                try {
+//                    var bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
+//                    val matrix = Matrix()
+//                    matrix.postRotate(90f)
+//                    bitmap =
+//                        Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+//                    runOnUiThread { mCaptureImageView?.setImageBitmap(bitmap) }
+//                    mCamera.invalidate()
+//                } catch (e: Exception) {
+//                    e.printStackTrace()
+//                }
             }
         })
         mCamera.open()
@@ -188,4 +196,22 @@ class MainActivity : AppCompatActivity() {
         Manifest.permission.READ_EXTERNAL_STORAGE,
         Manifest.permission.CAMERA
     )
+
+    fun saveBitmap(bmp: Bitmap): File {
+        val appDir = File(this.obbDir, "gl")
+        if (!appDir.exists()) {
+            appDir.mkdir()
+        }
+        val fileName = "gltest" + ".jpg"
+        val file = File(appDir, fileName)
+        try {
+            val fos = FileOutputStream(file)
+            bmp.compress(Bitmap.CompressFormat.JPEG, 100, fos)
+            fos.flush()
+            fos.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return file
+    }
 }
