@@ -26,7 +26,12 @@ class CameraJni : GLSurfaceView.Renderer {
     }
 
     fun onCapture(): ByteArray? {
-        return native_OnCapture()
+        try {
+            return native_OnCapture()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return null
     }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {

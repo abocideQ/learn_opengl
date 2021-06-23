@@ -3,6 +3,7 @@
 extern "C" {
 #define IN_PIXELS_BY_PBO;
 #define OUT_PIXELS_BY_PBO;
+#define size(n) (sizeof(n) / sizeof(n[0]))
 const char *shaderVertexCamera =
         "#version 300 es                                \n"
         "layout(location = 0) in vec4 viPosition;       \n"
@@ -110,7 +111,8 @@ const char *shaderFragmentCameraSplit_fbo =
         "}else{                                         \n"
         "newTexCoord.y = (newTexCoord.y - 0.5) * 2.0;   \n"
         "}                                              \n"
-        "fragColor = YUV420888toRGB(newTexCoord);       \n"
+        "vec4 newColor = YUV420888toRGB(newTexCoord);   \n"
+        "fragColor = vec4(newColor.r, newColor.g, newColor.b, 1.0);"
         "}                                              \n";
 const float LOCATION_VERTEX_CAMERA[] = {
         -1.0f, -1.0f, 0.0f,
@@ -304,7 +306,7 @@ void CameraSample::onDraw() {
                                                  GL_MAP_WRITE_BIT |
                                                  GL_MAP_INVALIDATE_BUFFER_BIT);
     if (ptr1) {
-        memcpy(ptr1, m_buffer, static_cast<size_t>(size));
+        memcpy(ptr1, m_buffer, static_cast<size_t>( size));
         glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
     }
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
@@ -323,7 +325,7 @@ void CameraSample::onDraw() {
                                                  GL_MAP_WRITE_BIT |
                                                  GL_MAP_INVALIDATE_BUFFER_BIT);
     if (ptr2) {
-        memcpy(ptr2, m_buffer + (m_w * m_h), static_cast<size_t>(size));
+        memcpy(ptr2, m_buffer + (m_w * m_h), static_cast<size_t>( size));
         glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
     }
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
@@ -342,7 +344,7 @@ void CameraSample::onDraw() {
                                                  GL_MAP_WRITE_BIT |
                                                  GL_MAP_INVALIDATE_BUFFER_BIT);
     if (ptr3) {
-        memcpy(ptr3, m_buffer + (m_w * m_h) + (m_w * m_h / 4), static_cast<size_t>(size));
+        memcpy(ptr3, m_buffer + (m_w * m_h) + (m_w * m_h / 4), static_cast<size_t>( size));
         glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
     }
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
@@ -380,8 +382,6 @@ void CameraSample::onDraw() {
     glUniform1i(textureU, 1);
     glUniform1i(textureV, 2);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (const void *) 0);
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
 #ifdef OUT_PIXELS_BY_PBO
     size = m_w * m_h * 4;
     index = oddIndex;
@@ -399,6 +399,8 @@ void CameraSample::onDraw() {
     }
     glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
 #endif
+    glBindVertexArray(0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     //normal
     glViewport(0, 0, m_diplay_w, m_diplay_h);
@@ -429,22 +431,6 @@ void CameraSample::onDestroy() {
     if (m_VBO_Camera[0]) {
         glDeleteBuffers(3, m_VBO_Camera);
     }
-    if (m_Texture_Camera[0]) {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glDeleteTextures(3, m_Texture_Camera);
-    }
-    if (m_VAO_Camera[0]) {
-        glDeleteVertexArrays(1, m_VAO_Camera);
-    }
-    if (m_Program_Camera) {
-        glDeleteProgram(m_Program_Camera);
-        m_Program_Camera = GL_NONE;
-    }
     if (m_Texture_Camera_FBO[0]) {
         glDeleteTextures(1, m_Texture_Camera_FBO);
     }
@@ -464,6 +450,23 @@ void CameraSample::onDestroy() {
     if (m_PBO_Out[0]) {
         glDeleteBuffers(6, m_PBO_In);
     }
+    if (m_Texture_Camera[0]) {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glDeleteTextures(3, m_Texture_Camera);
+    }
+    if (m_VAO_Camera[0]) {
+        glDeleteVertexArrays(1, m_VAO_Camera);
+    }
+    if (m_Program_Camera) {
+        glDeleteProgram(m_Program_Camera);
+//        m_Program_Camera = GL_NONE;
+    }
+    m_Sample = nullptr;
 }
 
 CameraSample *CameraSample::m_Sample = nullptr;

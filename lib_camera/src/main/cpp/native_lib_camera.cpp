@@ -30,8 +30,9 @@ void native_OnPreview(JNIEnv *env, jobject obj, jbyteArray dataBytes, jint w, ji
 
 jbyteArray native_OnCapture(JNIEnv *env, jobject obj) {
     uint8_t *buffer = CameraSample::instance()->onCaptureFrame();
-    if (buffer == nullptr) return nullptr;
     int length = CameraSample::instance()->onCaptureFrameLength();
+    if (buffer == nullptr) return nullptr;
+    if (length == 0) return nullptr;
     jbyteArray data = env->NewByteArray(length);
     env->SetByteArrayRegion(data, 0, length, reinterpret_cast<jbyte *>(buffer));
     return data;

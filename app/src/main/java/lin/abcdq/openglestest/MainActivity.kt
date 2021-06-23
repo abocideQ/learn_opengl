@@ -2,12 +2,10 @@ package lin.abcdq.openglestest
 
 import android.Manifest
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.graphics.*
 import android.opengl.GLSurfaceView
 import android.os.Bundle
-import android.util.Log
 import android.view.Surface
 import android.view.TextureView
 import android.widget.Button
@@ -20,6 +18,8 @@ import lin.abcdq.camera.CameraUse
 import lin.abcdq.camera.camera.CameraWrapCall
 import java.io.File
 import java.io.FileOutputStream
+import java.nio.ByteBuffer
+
 
 //https://www.jianshu.com/u/d82c936b6b71
 class MainActivity : AppCompatActivity() {
@@ -44,6 +44,7 @@ class MainActivity : AppCompatActivity() {
         requestPermissions(mPermissions, 100)
         val mButtonNext = findViewById<Button>(R.id.bt_next)
         mButtonNext.setOnClickListener {
+            mRender?.onDestroy()
             mCamera.close()
             if (mType < 2) mType++
             else mType = 0
@@ -165,9 +166,10 @@ class MainActivity : AppCompatActivity() {
         mButtonCapture?.setOnClickListener {
 //            mCamera.capture()
             val byteArray = mRender?.onCapture() ?: return@setOnClickListener
-            val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
-            saveBitmap(bitmap)
-            runOnUiThread { mCaptureImageView?.setImageBitmap(bitmap) }
+            val bm = Bitmap.createBitmap(1280, 720, Bitmap.Config.ARGB_8888)
+            val buf = ByteBuffer.wrap(byteArray)
+            bm.copyPixelsFromBuffer(buf)
+            runOnUiThread { mCaptureImageView?.setImageBitmap(bm) }
         }
         mCamera.setCall(object : CameraWrapCall {
             override fun onPreview(byteArray: ByteArray, width: Int, height: Int) {
