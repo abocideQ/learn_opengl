@@ -8,9 +8,11 @@ class CameraJni : GLSurfaceView.Renderer {
 
     companion object {
         const val FORMAT_RGBA = 0x01
-        const val FORMAT_NV21 = 0x02
-        const val FORMAT_NV12 = 0x03
-        const val FORMAT_I420 = 0x04
+        const val FORMAT_YUV420888 = 0x02
+        const val FORMAT_YUV420 = 0x03
+        const val FORMAT_YUV421 = 0x04
+        const val FORMAT_YUV422 = 0x05
+        const val FORMAT_NV21 = 0x06
     }
 
     init {

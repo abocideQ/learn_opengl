@@ -24,6 +24,8 @@ public:
 
     void onDraw();
 
+    void onChangeOffset();
+
     void onDestroy();
 
     static CameraSample *instance();
@@ -53,6 +55,8 @@ protected:
     GLuint m_PBO_In[6];
     GLuint m_PBO_Out[2];
     int m_PBO_Index = 0;
+
+    float m_Offset = 0.0f;
 private:
     static CameraSample *m_Sample;
 };

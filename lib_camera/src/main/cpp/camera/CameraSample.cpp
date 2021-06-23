@@ -1,9 +1,6 @@
 #include "CameraSample.h"
 
 extern "C" {
-#define IN_PIXELS_BY_PBO;
-#define OUT_PIXELS_BY_PBO;
-#define size(n) (sizeof(n) / sizeof(n[0]))
 const char *shaderVertexCamera =
         "#version 300 es                                \n"
         "layout(location = 0) in vec4 viPosition;       \n"
@@ -14,7 +11,6 @@ const char *shaderVertexCamera =
         "gl_Position = viPosition * vMatrix;            \n"
         "fiTexCoord = viTexCoord;                       \n"
         "}                                              \n";
-//展示
 const char *shaderFragmentCamera =
         "#version 300 es                                \n"
         "precision highp float;                         \n"
@@ -24,28 +20,6 @@ const char *shaderFragmentCamera =
         "void main()                                    \n"
         "{                                              \n"
         "fragColor = texture(s_TextureMap, fiTexCoord); \n"
-        "}                                              \n";
-//分屏
-const char *shaderFragmentCameraSplit =
-        "#version 300 es                                \n"
-        "precision highp float;                         \n"
-        "in vec2 fiTexCoord;                            \n"
-        "layout(location = 0) out vec4 fragColor;       \n"
-        "uniform sampler2D s_TextureMap;                \n"
-        "void main()                                    \n"
-        "{                                              \n"
-        "vec2 newTexCoord = fiTexCoord;                 \n"
-        "if (newTexCoord.x < 0.5){                      \n"
-        "newTexCoord.x = newTexCoord.x * 2.0;           \n"
-        "}else{                                         \n"
-        "newTexCoord.x = (newTexCoord.x - 0.5) * 2.0;   \n"
-        "}                                              \n"
-        "if (newTexCoord.y < 0.5){                      \n"
-        "newTexCoord.y = newTexCoord.y * 2.0;           \n"
-        "}else{                                         \n"
-        "newTexCoord.y = (newTexCoord.y - 0.5) * 2.0;   \n"
-        "}                                              \n"
-        "fragColor = texture(s_TextureMap, newTexCoord);\n"
         "}                                              \n";
 const char *shaderVertexCamera_fbo =
         "#version 300 es                                \n"
@@ -89,9 +63,9 @@ const char *shaderFragmentCameraSplit_fbo =
         "layout(location = 0) out vec4 fragColor;       \n"
         "vec4 YUV420888toRGB(vec2 texCoord){            \n"
         "float y, u, v, r, g, b;                        \n"
-        "y = texture(s_textureY, fiTexCoord).r;         \n"
-        "u = texture(s_textureU, fiTexCoord).r;         \n"
-        "v = texture(s_textureV, fiTexCoord).r;         \n"
+        "y = texture(s_textureY, texCoord).r;           \n"
+        "u = texture(s_textureU, texCoord).r;           \n"
+        "v = texture(s_textureV, texCoord).r;           \n"
         "u = u - 0.5;                                   \n"
         "v = v - 0.5;                                   \n"
         "r = y + 1.403 * v;                             \n"
@@ -111,8 +85,35 @@ const char *shaderFragmentCameraSplit_fbo =
         "}else{                                         \n"
         "newTexCoord.y = (newTexCoord.y - 0.5) * 2.0;   \n"
         "}                                              \n"
-        "vec4 newColor = YUV420888toRGB(newTexCoord);   \n"
-        "fragColor = vec4(newColor.r, newColor.g, newColor.b, 1.0);"
+        "fragColor = YUV420888toRGB(newTexCoord);       \n"
+        "}                                              \n";
+//分色偏移
+const char *shaderFragmentCameraColorOffset_fbo =
+        "#version 300 es                                \n"
+        "precision highp float;                         \n"
+        "in vec2 fiTexCoord;                            \n"
+        "uniform sampler2D s_textureY;                  \n"
+        "uniform sampler2D s_textureU;                  \n"
+        "uniform sampler2D s_textureV;                  \n"
+        "layout(location = 0) out vec4 fragColor;       \n"
+        "uniform float fOffset;                         \n"
+        "vec4 YUV420888toRGB(vec2 texCoord){            \n"
+        "float y, u, v, r, g, b;                        \n"
+        "y = texture(s_textureY, texCoord).r;           \n"
+        "u = texture(s_textureU, texCoord).r;           \n"
+        "v = texture(s_textureV, texCoord).r;           \n"
+        "u = u - 0.5;                                   \n"
+        "v = v - 0.5;                                   \n"
+        "r = y + 1.403 * v;                             \n"
+        "g = y - 0.344 * u - 0.714 * v;                 \n"
+        "b = y + 1.770 * u;                             \n"
+        "return vec4(r, g, b, 1.0);                     \n"
+        "}                                              \n"
+        "void main(){                                   \n"
+        "vec4 color = YUV420888toRGB(fiTexCoord); \n"
+        "vec4 color1 = YUV420888toRGB(vec2(fiTexCoord.x + fOffset, fiTexCoord.y + fOffset));\n"
+        "vec4 color2 = YUV420888toRGB(vec2(fiTexCoord.x - fOffset, fiTexCoord.y - fOffset));\n"
+        "fragColor = vec4(color.r, color1.g, color2.b, 1.0);\n"
         "}                                              \n";
 const float LOCATION_VERTEX_CAMERA[] = {
         -1.0f, -1.0f, 0.0f,
@@ -135,7 +136,9 @@ const float LOCATION_TEXTURE_CAMERA_FBO[] = {
 const int LOCATION_INDICES[] = {
         0, 1, 2, 1, 3, 2
 };
-
+const float OFFSET_MAX[9] = {1.0f, 0.965f, 0.9f, 0.9f, 0.9f, 0.6f, 0.8f, 0.5f, 0.5f};
+#define IN_PIXELS_BY_PBO;
+#define OUT_PIXELS_BY_PBO;
 void CameraSample::onInit(int type) {
     m_Type = type;
 }
@@ -146,9 +149,13 @@ void CameraSample::onSurfaceCreated() {
         m_Program_Camera_FBO = GLUtils::glProgram(shaderVertexCamera_fbo,
                                                   shaderFragmentCameraDisplay_fbo);
     } else if (m_Type == 2) {
-        m_Program_Camera = GLUtils::glProgram(shaderVertexCamera, shaderFragmentCameraSplit);
+        m_Program_Camera = GLUtils::glProgram(shaderVertexCamera, shaderFragmentCamera);
         m_Program_Camera_FBO = GLUtils::glProgram(shaderVertexCamera_fbo,
                                                   shaderFragmentCameraSplit_fbo);
+    } else if (m_Type == 3) {
+        m_Program_Camera = GLUtils::glProgram(shaderVertexCamera, shaderFragmentCamera);
+        m_Program_Camera_FBO = GLUtils::glProgram(shaderVertexCamera_fbo,
+                                                  shaderFragmentCameraColorOffset_fbo);
     }
     if (m_Program_Camera == GL_NONE) return;
     if (m_Program_Camera_FBO == GL_NONE) return;
@@ -262,24 +269,23 @@ void CameraSample::onDraw() {
     if (m_h == 0) return;
 #ifdef IN_PIXELS_BY_PBO
     //texture data pbo
-    if (m_PBO_Index == 0) {
-        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[0]);
-        glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h, 0, GL_STREAM_DRAW);
-        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[1]);
-        glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h, 0, GL_STREAM_DRAW);
-        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[2]);
-        glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h / 4, 0, GL_STREAM_DRAW);
-        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[3]);
-        glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h / 4, 0, GL_STREAM_DRAW);
-        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[4]);
-        glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h / 4, 0, GL_STREAM_DRAW);
-        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[5]);
-        glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h / 4, 0, GL_STREAM_DRAW);
-        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[0]);
-        glBufferData(GL_PIXEL_PACK_BUFFER, m_w * m_h * 4, 0, GL_STREAM_READ);
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[1]);
-        glBufferData(GL_PIXEL_PACK_BUFFER, m_w * m_h * 4, 0, GL_STREAM_READ);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[0]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h, 0, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[1]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h, 0, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[2]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h / 4, 0, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[3]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h / 4, 0, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[4]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h / 4, 0, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, m_PBO_In[5]);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, m_w * m_h / 4, 0, GL_STREAM_DRAW);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[0]);
+    glBufferData(GL_PIXEL_PACK_BUFFER, m_w * m_h * 4, 0, GL_STREAM_READ);
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[1]);
+    glBufferData(GL_PIXEL_PACK_BUFFER, m_w * m_h * 4, 0, GL_STREAM_READ);
 //        glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[2]);
 //        glBufferData(GL_PIXEL_PACK_BUFFER, m_w * m_h / 4, 0, GL_STREAM_READ);
 //        glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[3]);
@@ -288,8 +294,7 @@ void CameraSample::onDraw() {
 //        glBufferData(GL_PIXEL_PACK_BUFFER, m_w * m_h / 4, 0, GL_STREAM_READ);
 //        glBindBuffer(GL_PIXEL_PACK_BUFFER, m_PBO_Out[5]);
 //        glBufferData(GL_PIXEL_PACK_BUFFER, m_w * m_h / 4, 0, GL_STREAM_READ);
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
-    }
+    glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
     int oddIndex = m_PBO_Index % 2;
     m_PBO_Index++;
     int index = oddIndex;
@@ -381,6 +386,7 @@ void CameraSample::onDraw() {
     glUniform1i(textureY, 0);
     glUniform1i(textureU, 1);
     glUniform1i(textureV, 2);
+    onChangeOffset();
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (const void *) 0);
 #ifdef OUT_PIXELS_BY_PBO
     size = m_w * m_h * 4;
@@ -425,6 +431,17 @@ void CameraSample::onDraw() {
     glUniformMatrix4fv(vMatrix, 1, GL_FALSE, glm::value_ptr(mat4Matrix));
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (const void *) 0);
+}
+
+void CameraSample::onChangeOffset() {
+    //after glUseProgram()
+    float randomOffset = -1 * ((rand() / float(RAND_MAX + 1)) / 100);
+    if (m_Type == 3) {
+        GLint offsetHandler = glGetUniformLocation(m_Program_Camera_FBO, "fOffset");
+        m_Offset += randomOffset;
+        if (m_Offset >= 1) m_Offset = 0;
+        glUniform1f(offsetHandler, m_Offset);
+    }
 }
 
 void CameraSample::onDestroy() {

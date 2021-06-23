@@ -1,6 +1,7 @@
 package lin.abcdq.openglestest
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.graphics.*
@@ -38,6 +39,7 @@ class MainActivity : AppCompatActivity() {
     private var mRender: CameraJni? = null
     private var mPosition = -1
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -46,7 +48,7 @@ class MainActivity : AppCompatActivity() {
         mButtonNext.setOnClickListener {
             mRender?.onDestroy()
             mCamera.close()
-            if (mType < 2) mType++
+            if (mType < 3) mType++
             else mType = 0
             startActivity(this)
         }
@@ -65,6 +67,10 @@ class MainActivity : AppCompatActivity() {
             2 -> {
                 textView.text = "opengles 分屏渲染"
                 initGL(2)
+            }
+            3 -> {
+                textView.text = "opengles 分色偏移"
+                initGL(3)
             }
         }
     }
@@ -164,12 +170,20 @@ class MainActivity : AppCompatActivity() {
             )
         }
         mButtonCapture?.setOnClickListener {
-//            mCamera.capture()
             val byteArray = mRender?.onCapture() ?: return@setOnClickListener
-            val bm = Bitmap.createBitmap(1280, 720, Bitmap.Config.ARGB_8888)
             val buf = ByteBuffer.wrap(byteArray)
-            bm.copyPixelsFromBuffer(buf)
-            runOnUiThread { mCaptureImageView?.setImageBitmap(bm) }
+            var bitmap = Bitmap.createBitmap(
+                mCamera.getPreviewSize()?.width ?: 1,
+                mCamera.getPreviewSize()?.height ?: 1,
+                Bitmap.Config.ARGB_8888
+            )
+            bitmap.copyPixelsFromBuffer(buf)
+            val matrix = Matrix()
+            matrix.postRotate(90f)
+            bitmap =
+                Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+            runOnUiThread { mCaptureImageView?.setImageBitmap(bitmap) }
+//            mCamera.capture()
         }
         mCamera.setCall(object : CameraWrapCall {
             override fun onPreview(byteArray: ByteArray, width: Int, height: Int) {
