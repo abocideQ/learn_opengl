@@ -1,5 +1,5 @@
 ```
-Camera2 ——> CameraUse
+Camera2 ——> new CameraUse()..
 
 Camera2 + textureView 预览 拍照
 
