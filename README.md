@@ -9,4 +9,5 @@ opengles + Camera2 四分屏滤镜
 
 opengles + Camera2 分色偏差滤镜
 
+opengles + Camera2 加权混合滤镜
 ```

@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
         mButtonNext.setOnClickListener {
             mRender?.onDestroy()
             mCamera.close()
-            if (mType < 3) mType++
+            if (mType < 4) mType++
             else mType = 0
             startActivity(this)
         }
@@ -69,8 +69,12 @@ class MainActivity : AppCompatActivity() {
                 initGL(2)
             }
             3 -> {
-                textView.text = "opengles 分色偏移"
+                textView.text = "opengles 分色偏差"
                 initGL(3)
+            }
+            4 -> {
+                textView.text = "opengles 加权混合"
+                initGL(4)
             }
         }
     }
