@@ -44,6 +44,9 @@ void CameraSample::onSurfaceCreated() {
     } else if (m_Type == 4) {
         m_Program_Camera_FBO = GLUtils::glProgram(ShaderVertex_FBO,
                                                   ShaderFragment_FBO_YUV420888_SoulOut);
+    } else if (m_Type == 5) {
+        m_Program_Camera_FBO = GLUtils::glProgram(ShaderVertex_FBO,
+                                                  ShaderFragment_FBO_YUV420888_ScaleCircle);
     }
     if (m_Program_Camera == GL_NONE) return;
     if (m_Program_Camera_FBO == GL_NONE) return;
@@ -333,6 +336,16 @@ void CameraSample::onChangeOffset() {
         if (m_Offset >= 1) m_Offset = 0;
         glUniform1f(offsetHandler, m_Offset);
     } else if (m_Type == 4) {
+        GLint offsetHandler = glGetUniformLocation(m_Program_Camera_FBO, "fOffset");
+        m_Offset += randomOffset;
+        if (m_Offset >= 1) m_Offset = 0;
+        glUniform1f(offsetHandler, m_Offset);
+    } else if (m_Type == 5) {
+        GLint texSizeHandler = glGetUniformLocation(m_Program_Camera_FBO, "textureSize");
+        GLfloat size[2];
+        size[0] = m_w;
+        size[1] = m_h;
+        glUniform2fv(texSizeHandler, 1, &size[0]);
         GLint offsetHandler = glGetUniformLocation(m_Program_Camera_FBO, "fOffset");
         m_Offset += randomOffset;
         if (m_Offset >= 1) m_Offset = 0;

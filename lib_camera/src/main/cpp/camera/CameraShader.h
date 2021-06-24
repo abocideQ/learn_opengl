@@ -185,4 +185,44 @@ const char *ShaderFragment_FBO_YUV420888_SoulOut =
                     fragColor = originColor * (1.0 - alpha) + scaleColor * alpha;
                 }
         );
+const char *ShaderFragment_FBO_YUV420888_ScaleCircle =
+        GL_SHADER_VERSION
+        GL_SHADER(
+                precision highp float;
+                in vec2 fiTexCoord;
+                uniform sampler2D s_textureY;
+                uniform sampler2D s_textureU;
+                uniform sampler2D s_textureV;
+                layout(location = 0) out vec4 fragColor;
+                uniform float fOffset;
+                uniform vec2 textureSize;
+                vec4 YUV420888toRGB(vec2 texCoord) {
+                    float y = 0.0f;
+                    float u = 0.0f;
+                    float v = 0.0f;
+                    float r = 0.0f;
+                    float g = 0.0f;
+                    float b = 0.0f;
+                    y = texture(s_textureY, texCoord).r;
+                    u = texture(s_textureU, texCoord).r;
+                    v = texture(s_textureV, texCoord).r;
+                    u = u - 0.5;
+                    v = v - 0.5;
+                    r = y + 1.403 * v;
+                    g = y - 0.344 * u - 0.714 * v;
+                    b = y + 1.770 * u;
+                    return vec4(r, g, b, 1.0f);
+                }
+                const float MAX_ALPHA = 0.5;
+                const float MAX_SCALE = 0.8;
+                void main() {
+                    vec2 imgTexture = fiTexCoord * textureSize;
+                    float r = (fOffset + 0.208) * textureSize.x;
+                    if (distance(imgTexture, vec2(textureSize.x / 2.0, textureSize.y / 2.0)) < r) {
+                        fragColor = YUV420888toRGB(fiTexCoord);
+                    } else {
+                        fragColor = vec4(1.0, 1.0, 1.0, 1.0);
+                    }
+                }
+        );
 #endif //OPENGLESTEST_CAMERASHADER_H

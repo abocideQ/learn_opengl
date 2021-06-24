@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
         mButtonNext.setOnClickListener {
             mRender?.onDestroy()
             mCamera.close()
-            if (mType < 4) mType++
+            if (mType < 5) mType++
             else mType = 0
             startActivity(this)
         }
@@ -75,6 +75,10 @@ class MainActivity : AppCompatActivity() {
             4 -> {
                 textView.text = "opengles 加权混合"
                 initGL(4)
+            }
+            5 -> {
+                textView.text = "opengles 区域绘制"
+                initGL(5)
             }
         }
     }
@@ -187,7 +191,6 @@ class MainActivity : AppCompatActivity() {
             bitmap =
                 Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
             runOnUiThread { mCaptureImageView?.setImageBitmap(bitmap) }
-//            mCamera.capture()
         }
         mCamera.setCall(object : CameraWrapCall {
             override fun onPreview(byteArray: ByteArray, width: Int, height: Int) {
@@ -195,17 +198,6 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onCapture(byteArray: ByteArray, width: Int, height: Int) {
-//                try {
-//                    var bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
-//                    val matrix = Matrix()
-//                    matrix.postRotate(90f)
-//                    bitmap =
-//                        Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-//                    runOnUiThread { mCaptureImageView?.setImageBitmap(bitmap) }
-//                    mCamera.invalidate()
-//                } catch (e: Exception) {
-//                    e.printStackTrace()
-//                }
             }
         })
         mCamera.open()
@@ -216,22 +208,4 @@ class MainActivity : AppCompatActivity() {
         Manifest.permission.READ_EXTERNAL_STORAGE,
         Manifest.permission.CAMERA
     )
-
-    fun saveBitmap(bmp: Bitmap): File {
-        val appDir = File(this.obbDir, "gl")
-        if (!appDir.exists()) {
-            appDir.mkdir()
-        }
-        val fileName = "gltest" + ".jpg"
-        val file = File(appDir, fileName)
-        try {
-            val fos = FileOutputStream(file)
-            bmp.compress(Bitmap.CompressFormat.JPEG, 100, fos)
-            fos.flush()
-            fos.close()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return file
-    }
 }
