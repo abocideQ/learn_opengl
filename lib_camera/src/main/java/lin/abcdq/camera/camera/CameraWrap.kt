@@ -36,7 +36,7 @@ internal class CameraWrap(context: Context) {
         val characteristics = mCameras[facing] ?: return null
         val configs = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
             ?: return null
-        return configs.getOutputSizes(IMAGE_FORMAT)
+        return configs.getOutputSizes(ImageFormat.YUV_420_888)
     }
 
     fun getPreviewSize(): Size? {
@@ -59,7 +59,7 @@ internal class CameraWrap(context: Context) {
     fun openCamera(facing: String, surface: Surface?) {
         initHandler()
         mPreviewReader = ImageReader.newInstance(
-            mPreviewSize?.width ?: 1, mPreviewSize?.height ?: 1, IMAGE_FORMAT, 2
+            mPreviewSize?.width ?: 1, mPreviewSize?.height ?: 1, ImageFormat.YUV_420_888, 2
         )
         mPreviewReader?.setOnImageAvailableListener(
             {
@@ -79,7 +79,7 @@ internal class CameraWrap(context: Context) {
             mHandler
         )
         mCaptureReader = ImageReader.newInstance(
-            mPreviewSize?.width ?: 1, mPreviewSize?.height ?: 1, IMAGE_FORMAT, 2
+            mPreviewSize?.width ?: 1, mPreviewSize?.height ?: 1, ImageFormat.YUV_420_888, 2
         )
         mCaptureReader?.setOnImageAvailableListener(
             {
@@ -265,7 +265,7 @@ internal class CameraWrap(context: Context) {
             characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP) ?: return
         val orientation = characteristics.get(CameraCharacteristics.SENSOR_ORIENTATION) ?: return
         Log.e("CameraWrap", "SENSOR_ORIENTATION : $orientation")
-        val previewSizes: Array<Size> = configs.getOutputSizes(IMAGE_FORMAT) ?: return
+        val previewSizes: Array<Size> = configs.getOutputSizes(ImageFormat.YUV_420_888) ?: return
         val defaultRatio = mDefaultCaptureSize.width * 1.0f / mDefaultCaptureSize.height
         var sameRatioSize: Size? = null
         val threshold = 0.001f

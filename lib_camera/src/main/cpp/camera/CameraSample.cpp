@@ -2,8 +2,8 @@
 #include "CameraShader.h"
 
 extern "C" {
-#define IN_PIXELS_BY_PBO true
-#define OUT_PIXELS_BY_PBO true
+//#define IN_PIXELS_BY_PBO true
+//#define OUT_PIXELS_BY_PBO true
 const float LOCATION_VERTEX_CAMERA[] = {
         -1.0f, -1.0f, 0.0f,
         1.0f, -1.0f, 0.0f,

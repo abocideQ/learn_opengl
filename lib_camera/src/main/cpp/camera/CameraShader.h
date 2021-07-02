@@ -225,4 +225,33 @@ const char *ShaderFragment_FBO_YUV420888_ScaleCircle =
                     }
                 }
         );
+const char *ShaderFragment_FBO_NV21 =
+        GL_SHADER_VERSION
+        GL_SHADER(
+                precision highp float;
+                in vec2 fiTexCoord;
+                uniform sampler2D s_textureY;
+                uniform sampler2D s_textureVU;
+                layout(location = 0) out vec4 fragColor;
+                vec4 NV21toRGB(vec2 texCoord) {
+                    float y = 0.0f;
+                    float u = 0.0f;
+                    float v = 0.0f;
+                    float r = 0.0f;
+                    float g = 0.0f;
+                    float b = 0.0f;
+                    y = texture(s_textureY, texCoord).r;
+                    u = texture(s_textureVU, texCoord).a;
+                    v = texture(s_textureVU, texCoord).r;
+                    u = u - 0.5;
+                    v = v - 0.5;
+                    r = y + 1.403 * v;
+                    g = y - 0.344 * u - 0.714 * v;
+                    b = y + 1.770 * u;
+                    return vec4(r, g, b, 1.0f);
+                }
+                void main() {
+                    fragColor = NV21toRGB(fiTexCoord);
+                }
+        );
 #endif //OPENGLESTEST_CAMERASHADER_H
