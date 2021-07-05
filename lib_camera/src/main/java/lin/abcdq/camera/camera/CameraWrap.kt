@@ -66,7 +66,11 @@ internal class CameraWrap(context: Context) {
                 val image: Image? = it.acquireLatestImage()
                 if (image != null) {
                     if (IMAGE_FORMAT == ImageFormat.YUV_420_888) {
-                        mCall?.onPreview(ImageUtils.image2YUV420888(image), image.width, image.height)
+                        mCall?.onPreview(
+                            ImageUtils.image2YUV420888(image),
+                            image.width,
+                            image.height
+                        )
                     } else if (IMAGE_FORMAT == ImageFormat.JPEG) {
                         val byteBuffer = image.planes[0].buffer
                         val byteArray = ByteArray(byteBuffer.remaining())
@@ -193,7 +197,7 @@ internal class CameraWrap(context: Context) {
                 mCameraSession = null
             }
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val sessionConfiguration = SessionConfiguration(
                 SessionConfiguration.SESSION_REGULAR,
                 listOf(
