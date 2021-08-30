@@ -41,7 +41,7 @@ GL_LUMINANCE        -> vec4(L,L,L,1)  -> L即Y或U或V (例YUV420888/NV21的Y)
 -> texture(Map, Coord).r/texture(Map, Coord).g/texture(Map, Coord).b 都为Y或U或V
 
 GL_LUMINANCE_ALPHA  -> vec4(L,L,L,A)  -> L即Y A即U或V (例NV21的U+V)    
--> texture(Map, Coord).r 为 Y + texture(Map, Coord).a 为 V/U
+-> texture(Map, Coord).r 为 U/V   +   texture(Map, Coord).a 为 U/V
 
 GL_RGB              -> vec4(R,G,B,1)  -> R,G,B                   -> .r .g .b .a
 GL_RGBA             -> vec4(R,G,B,A)  -> R,G,B,A                 -> .r .g .b .a
