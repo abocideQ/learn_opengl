@@ -40,7 +40,7 @@ glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
 GL_LUMINANCE        -> vec4(L,L,L,1)  -> L即Y或U或V (例YUV420888的YUV/NV21的Y) 
 -> texture(Map, Coord).r/texture(Map, Coord).g/texture(Map, Coord).b 都为Y或U或V
 
-GL_LUMINANCE_ALPHA  -> vec4(L,L,L,A)  -> L即Y A即U或V (例NV21的U+V)    
+GL_LUMINANCE_ALPHA  -> vec4(L,L,L,A)  -> L即U或V A即U或V (例NV21的U+V)    
 -> texture(Map, Coord).r 为 U/V   +   texture(Map, Coord).a 为 U/V
 
 GL_RGB              -> vec4(R,G,B,1)  -> R,G,B                   -> .r .g .b .a
